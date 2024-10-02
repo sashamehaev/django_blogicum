@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.views.generic import (
     CreateView, DeleteView, DetailView, ListView, UpdateView
 )
@@ -10,9 +10,22 @@ from blog.models import Post, Category
 
 POSTS_PER_PAGE = 5
 
+User = get_user_model()
+
 
 class BirthdayDetailView(DetailView):
     model = User
+
+
+def profile(request, username):
+    template = 'blog/profile.html'
+    profile = get_object_or_404(
+        User,
+        username=username
+    )
+    print(profile)
+    context = {'profile': profile}
+    return render(request, template, context)
 
 
 def get_posts():
