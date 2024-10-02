@@ -6,7 +6,7 @@ from django.views.generic import (
 )
 
 from blog.models import Post, Category
-
+from .forms import UserForm
 
 POSTS_PER_PAGE = 5
 
@@ -23,8 +23,14 @@ def profile(request, username):
         User,
         username=username
     )
-    print(profile)
     context = {'profile': profile}
+    return render(request, template, context)
+
+
+def edit_profile(request):
+    template = 'blog/user.html'
+    form = UserForm()
+    context = {'form': form}
     return render(request, template, context)
 
 
