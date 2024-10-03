@@ -27,7 +27,7 @@ def profile(request, username):
     return render(request, template, context)
 
 
-def edit_profile(request):
+def edit_profile(request, username):
     template = 'blog/user.html'
     form = UserForm()
     context = {'form': form}
