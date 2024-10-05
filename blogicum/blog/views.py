@@ -1,20 +1,30 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.core.paginator import Paginator
 from django.views.generic import (
     CreateView, DeleteView, DetailView, ListView, UpdateView
 )
 
 from blog.models import Post, Category
-from .forms import UserForm
+from .forms import UserForm, PostForm
 
-POSTS_PER_PAGE = 5
 
 User = get_user_model()
 
 
 class BirthdayDetailView(DetailView):
     model = User
+
+
+def create_post(request):
+    template = 'blog/create.html'
+    form = PostForm(request.POST or None)
+    context = {'form': form}
+    if form.is_valid():
+        form.save()
+        return redirect(f'blog:profile/{request.user}')
+    return render(request, template, context)
 
 
 def profile(request, username):
@@ -27,10 +37,13 @@ def profile(request, username):
     return render(request, template, context)
 
 
-def edit_profile(request, username):
+def edit_profile(request):
+    instance = get_object_or_404(User, pk=request.user.id)
     template = 'blog/user.html'
-    form = UserForm()
+    form = UserForm(request.POST or None, instance=instance)
     context = {'form': form}
+    if form.is_valid():
+        form.save()
     return render(request, template, context)
 
 
@@ -44,8 +57,11 @@ def get_posts():
 
 def index(request):
     template = 'blog/index.html'
-    posts = get_posts()[:POSTS_PER_PAGE]
-    context = {'posts': posts}
+    posts = get_posts()
+    paginator = Paginator(posts, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {'page_obj': page_obj}
     return render(request, template, context)
 
 
@@ -69,8 +85,11 @@ def category_posts(request, category_slug):
     )
 
     posts = get_posts().filter(category__slug=category_slug)
+    paginator = Paginator(posts, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     context = {
         'category': category,
-        'post_list': posts
+        'page_obj': page_obj
     }
     return render(request, template, context)
