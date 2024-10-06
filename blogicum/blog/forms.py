@@ -26,5 +26,7 @@ class PostForm(forms.ModelForm):
             'title',
             'text',
             'pub_date',
-            'author',
+            'category',
+            'location',
+            'image',
         )

@@ -18,6 +18,7 @@ from django.conf import settings
 from django.urls import include, path, reverse_lazy
 from django.contrib.auth.forms import UserCreationForm
 from django.views.generic.edit import CreateView
+from django.conf.urls.static import static
 
 handler404 = 'core.views.page_not_found'
 handler500 = 'core.views.server_error'
@@ -36,7 +37,7 @@ urlpatterns = [
     path('', include('blog.urls')),
     path('pages/', include('pages.urls')),
     path('admin/', admin.site.urls),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     import debug_toolbar

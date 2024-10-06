@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.views.generic import (
@@ -17,13 +18,16 @@ class BirthdayDetailView(DetailView):
     model = User
 
 
+@login_required
 def create_post(request):
     template = 'blog/create.html'
-    form = PostForm(request.POST or None)
+    form = PostForm(request.POST or None, files=request.FILES or None)
     context = {'form': form}
     if form.is_valid():
-        form.save()
-        return redirect(f'blog:profile/{request.user}')
+        instance = form.save(commit=False)
+        instance.author = request.user
+        instance.save()
+        return redirect(f'/profile/{request.user.username}/')
     return render(request, template, context)
 
 
@@ -37,6 +41,7 @@ def profile(request, username):
     return render(request, template, context)
 
 
+@login_required
 def edit_profile(request):
     instance = get_object_or_404(User, pk=request.user.id)
     template = 'blog/user.html'
