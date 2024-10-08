@@ -7,15 +7,11 @@ from django.views.generic import (
     CreateView, DeleteView, DetailView, ListView, UpdateView
 )
 
-from blog.models import Post, Category
-from .forms import UserForm, PostForm
+from blog.models import Post, Category, Comment
+from .forms import UserForm, PostForm, CommentForm
 
 
 User = get_user_model()
-
-
-class BirthdayDetailView(DetailView):
-    model = User
 
 
 @login_required
@@ -42,6 +38,22 @@ def profile(request, username):
 
 
 @login_required
+def edit_post(request, post_id):
+    instance = get_object_or_404(Post, pk=post_id)
+    template = 'blog/create.html'
+    form = PostForm(
+        request.POST or None,
+        instance=instance,
+        files=request.FILES or None
+    )
+    context = {'form': form}
+    if form.is_valid():
+        form.save()
+        return redirect(f'/posts/{post_id}/')
+    return render(request, template, context)
+
+
+@login_required
 def edit_profile(request):
     instance = get_object_or_404(User, pk=request.user.id)
     template = 'blog/user.html'
@@ -50,6 +62,20 @@ def edit_profile(request):
     if form.is_valid():
         form.save()
     return render(request, template, context)
+
+
+@login_required
+def create_comment(request, post_id):
+    comment = get_object_or_404(Comment, pk=post_id)
+    form = CommentForm(request.POST)
+    form = PostForm(request.POST or None, files=request.FILES or None)
+    context = {'form': form}
+    if form.is_valid():
+        instance = form.save(commit=False)
+        instance.author = request.user
+        instance.save()
+        return redirect(f'/profile/{request.user.username}/')
+    return render(request, context)
 
 
 def get_posts():

@@ -11,6 +11,12 @@ urlpatterns = [
     path('profile/<slug:username>/', views.profile, name='profile'),
     path('posts/create/', views.create_post, name='create_post'),
     path('posts/<int:id>/', views.post_detail, name='post_detail'),
+    path('posts/<int:post_id>/edit/', views.edit_post, name='edit_post'),
+    path(
+        'posts/<int:post_id>/comment/',
+        views.create_comment,
+        name='create_comment'
+    ),
     path(
         'category/<slug:category_slug>/',
         views.category_posts,
