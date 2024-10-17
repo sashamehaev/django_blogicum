@@ -10,7 +10,6 @@ from django.views.generic import (
 from blog.models import Post, Category, Comment
 from .forms import UserForm, PostForm, CommentForm
 
-
 User = get_user_model()
 
 
