@@ -24,19 +24,6 @@ class Category(BaseModel):
         return self.title
 
 
-class Comment(models.Model):
-    text = models.TextField('Комментарий')
-    created_at = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        null=True
-    )
-
-    class Meta:
-        ordering = ('created_at',)
-
-
 class Location(BaseModel):
     name = models.CharField('Название места', max_length=256)
 
@@ -90,3 +77,21 @@ class Post(BaseModel):
 
     def __str__(self):
         return self.title
+
+
+class Comment(models.Model):
+    text = models.TextField('Комментарий')
+    created_at = models.DateTimeField(auto_now_add=True)
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.CASCADE,
+        related_name="comment"
+    )
+
+    class Meta:
+        ordering = ('created_at',)
