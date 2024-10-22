@@ -66,6 +66,9 @@ def delete_post(request, post_id):
     form = PostForm(instance=instance)
     context = {'form': form}
 
+    if instance.author != request.user:
+        return redirect(f'/posts/{post_id}/')
+
     if request.method == 'POST':
         instance.delete()
         return redirect('blog:index')
@@ -118,6 +121,8 @@ def delete_comment(request, post_id, comment_id):
     template = 'blog/comment.html'
     comment = get_object_or_404(Comment, pk=comment_id)
     context = {'comment': comment}
+    if comment.author != request.user:
+        return redirect(f'/posts/{post_id}/')
 
     if request.method == 'POST':
         comment.delete()
@@ -147,9 +152,16 @@ def index(request):
 def post_detail(request, post_id):
     template = 'blog/detail.html'
     post = get_object_or_404(
-        get_posts(),
+        Post,
         pk=post_id
     )
+
+    if post.author != request.user:
+        post = get_object_or_404(
+            get_posts(),
+            pk=post_id
+        )
+
     comments = Comment.objects.all()
     form = CommentForm()
     context = {
