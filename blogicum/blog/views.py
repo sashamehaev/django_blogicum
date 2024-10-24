@@ -96,6 +96,8 @@ def add_comment(request, post_id):
         comment.author = request.user
         comment.post = post
         comment.save()
+        post.comment_count += 1
+        post.save()
     return redirect('blog:post_detail', post_id=post_id)
 
 
@@ -119,6 +121,7 @@ def edit_comment(request, post_id, comment_id):
 @login_required
 def delete_comment(request, post_id, comment_id):
     template = 'blog/comment.html'
+    post = get_object_or_404(Post, pk=post_id)
     comment = get_object_or_404(Comment, pk=comment_id)
     context = {'comment': comment}
     if comment.author != request.user:
@@ -126,6 +129,8 @@ def delete_comment(request, post_id, comment_id):
 
     if request.method == 'POST':
         comment.delete()
+        post.comment_count -= 1
+        post.save()
         return redirect(f'/posts/{post_id}/')
 
     return render(request, template, context)
