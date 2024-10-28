@@ -18,7 +18,7 @@ def paginator(items, request):
     return paginator.get_page(page_number)
 
 
-def postRedirect(post_id):
+def post_redirect(post_id):
     return HttpResponseRedirect(
         reverse(
             'blog:post_detail',
@@ -65,7 +65,7 @@ def profile(request, username):
 def edit_post(request, post_id):
     instance = get_object_or_404(Post, pk=post_id)
     if instance.author != request.user:
-        return postRedirect(post_id)
+        return post_redirect(post_id)
     template = 'blog/create.html'
     form = PostForm(
         request.POST or None,
@@ -75,7 +75,7 @@ def edit_post(request, post_id):
     context = {'form': form}
     if form.is_valid():
         form.save()
-        return postRedirect(post_id)
+        return post_redirect(post_id)
     return render(request, template, context)
 
 
@@ -87,7 +87,7 @@ def delete_post(request, post_id):
     context = {'form': form}
 
     if instance.author != request.user:
-        return postRedirect(post_id)
+        return post_redirect(post_id)
 
     if request.method == 'POST':
         instance.delete()
@@ -118,14 +118,14 @@ def add_comment(request, post_id):
         comment.save()
         post.comment_count += 1
         post.save()
-    return postRedirect(post_id)
+    return post_redirect(post_id)
 
 
 @login_required
 def edit_comment(request, post_id, comment_id):
     comment = get_object_or_404(Comment, pk=comment_id)
     if comment.author != request.user:
-        return postRedirect(post_id)
+        return post_redirect(post_id)
     template = 'blog/comment.html'
     form = CommentForm(request.POST or None, instance=comment)
     context = {
@@ -134,7 +134,7 @@ def edit_comment(request, post_id, comment_id):
     }
     if form.is_valid():
         form.save()
-        return postRedirect(post_id)
+        return post_redirect(post_id)
     return render(request, template, context)
 
 
@@ -145,13 +145,13 @@ def delete_comment(request, post_id, comment_id):
     comment = get_object_or_404(Comment, pk=comment_id)
     context = {'comment': comment}
     if comment.author != request.user:
-        return postRedirect(post_id)
+        return post_redirect(post_id)
 
     if request.method == 'POST':
         comment.delete()
         post.comment_count -= 1
         post.save()
-        return postRedirect(post_id)
+        return post_redirect(post_id)
 
     return render(request, template, context)
 
