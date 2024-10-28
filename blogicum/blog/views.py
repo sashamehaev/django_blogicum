@@ -1,13 +1,30 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
+from django.http import HttpResponseRedirect
 
 from blog.models import Post, Category, Comment
 from .forms import UserForm, PostForm, CommentForm
 
 User = get_user_model()
+
+
+def paginator(items, request):
+    paginator = Paginator(items, 10)
+    page_number = request.GET.get('page')
+    return paginator.get_page(page_number)
+
+
+def postRedirect(post_id):
+    return HttpResponseRedirect(
+        reverse(
+            'blog:post_detail',
+            kwargs={'post_id': post_id}
+        )
+    )
 
 
 @login_required
@@ -19,7 +36,12 @@ def create_post(request):
         instance = form.save(commit=False)
         instance.author = request.user
         instance.save()
-        return redirect(f'/profile/{request.user.username}/')
+        return HttpResponseRedirect(
+            reverse(
+                'blog:profile',
+                kwargs={'username': request.user.username}
+            )
+        )
     return render(request, template, context)
 
 
@@ -31,9 +53,7 @@ def profile(request, username):
     )
 
     profile_posts = Post.objects.filter(author=profile)
-    paginator = Paginator(profile_posts, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    page_obj = paginator(profile_posts, request)
     context = {
         'profile': profile,
         'page_obj': page_obj
@@ -45,7 +65,7 @@ def profile(request, username):
 def edit_post(request, post_id):
     instance = get_object_or_404(Post, pk=post_id)
     if instance.author != request.user:
-        return redirect(f'/posts/{post_id}/')
+        return postRedirect(post_id)
     template = 'blog/create.html'
     form = PostForm(
         request.POST or None,
@@ -55,7 +75,7 @@ def edit_post(request, post_id):
     context = {'form': form}
     if form.is_valid():
         form.save()
-        return redirect(f'/posts/{post_id}/')
+        return postRedirect(post_id)
     return render(request, template, context)
 
 
@@ -67,11 +87,11 @@ def delete_post(request, post_id):
     context = {'form': form}
 
     if instance.author != request.user:
-        return redirect(f'/posts/{post_id}/')
+        return postRedirect(post_id)
 
     if request.method == 'POST':
         instance.delete()
-        return redirect('blog:index')
+        return HttpResponseRedirect(reverse('blog:index'))
 
     return render(request, template, context)
 
@@ -98,14 +118,14 @@ def add_comment(request, post_id):
         comment.save()
         post.comment_count += 1
         post.save()
-    return redirect('blog:post_detail', post_id=post_id)
+    return postRedirect(post_id)
 
 
 @login_required
 def edit_comment(request, post_id, comment_id):
     comment = get_object_or_404(Comment, pk=comment_id)
     if comment.author != request.user:
-        return redirect(f'/posts/{post_id}/')
+        return postRedirect(post_id)
     template = 'blog/comment.html'
     form = CommentForm(request.POST or None, instance=comment)
     context = {
@@ -114,7 +134,7 @@ def edit_comment(request, post_id, comment_id):
     }
     if form.is_valid():
         form.save()
-        return redirect(f'/posts/{post_id}/')
+        return postRedirect(post_id)
     return render(request, template, context)
 
 
@@ -125,13 +145,13 @@ def delete_comment(request, post_id, comment_id):
     comment = get_object_or_404(Comment, pk=comment_id)
     context = {'comment': comment}
     if comment.author != request.user:
-        return redirect(f'/posts/{post_id}/')
+        return postRedirect(post_id)
 
     if request.method == 'POST':
         comment.delete()
         post.comment_count -= 1
         post.save()
-        return redirect(f'/posts/{post_id}/')
+        return postRedirect(post_id)
 
     return render(request, template, context)
 
@@ -147,9 +167,7 @@ def get_posts():
 def index(request):
     template = 'blog/index.html'
     posts = get_posts()
-    paginator = Paginator(posts, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    page_obj = paginator(posts, request)
     context = {'page_obj': page_obj}
     return render(request, template, context)
 
@@ -187,9 +205,7 @@ def category_posts(request, category_slug):
     )
 
     posts = get_posts().filter(category__slug=category_slug)
-    paginator = Paginator(posts, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    page_obj = paginator(posts, request)
     context = {
         'category': category,
         'page_obj': page_obj
