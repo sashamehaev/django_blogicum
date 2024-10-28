@@ -1,10 +1,9 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
-from django.http import HttpResponseRedirect
 
 from blog.models import Post, Category, Comment
 from .forms import UserForm, PostForm, CommentForm
@@ -19,7 +18,7 @@ def paginator(items, request):
 
 
 def post_redirect(post_id):
-    return HttpResponseRedirect(
+    return redirect(
         reverse(
             'blog:post_detail',
             kwargs={'post_id': post_id}
@@ -36,7 +35,7 @@ def create_post(request):
         instance = form.save(commit=False)
         instance.author = request.user
         instance.save()
-        return HttpResponseRedirect(
+        return redirect(
             reverse(
                 'blog:profile',
                 kwargs={'username': request.user.username}
@@ -91,7 +90,7 @@ def delete_post(request, post_id):
 
     if request.method == 'POST':
         instance.delete()
-        return HttpResponseRedirect(reverse('blog:index'))
+        return redirect(reverse('blog:index'))
 
     return render(request, template, context)
 
@@ -185,7 +184,7 @@ def post_detail(request, post_id):
             pk=post_id
         )
 
-    comments = Comment.objects.all()
+    comments = Comment.objects.filter(post_id=post_id)
     form = CommentForm()
     context = {
         'post': post,
